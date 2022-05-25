@@ -1,5 +1,7 @@
+// #include <Servo.h>
 #include "C:\Program Files (x86)\Arduino\hardware\arduino\avr\cores\arduino\Arduino.h"
 #include "./Sensor.h"
+
 
 //Ease Vars
 boolean startUp = true;
@@ -7,10 +9,10 @@ int spin = 50; //up to 255
 int IR = 800;
 
 //AVG Function
-const int maxLength = 4;
+const int maxLength = 3;
 int index = 0;
-int ListA[maxLength] = { 0, 0, 0, 0 };
-int ListB[maxLength] = { 0, 0, 0, 0 };
+int ListA[maxLength] = { 0, 0, 0 };
+int ListB[maxLength] = { 0, 0, 0 };
 float avgA = 0;
 float avgB = 0;
 
@@ -41,7 +43,12 @@ Sensor IR1(1, irPin1);
 Sensor IR2(1, irPin2);
 Sensor IR3(1, irPin3);
 
+// Servo myservo;
+
 void setup() {
+  // myservo.attach(10);
+  // myservo.write(-90);
+  // myservo.detach();
   //Motor
   pinMode(STBY, OUTPUT);
   pinMode(PWMA, OUTPUT);
@@ -58,12 +65,14 @@ void setup() {
 
 void loop() {
   // Serial.print(ping1.detect());
-  Serial.print("IR 1: ");
-  Serial.println(IR1.detect());
   int irResult1 = IR1.detect();
   int irResult2 = IR2.detect();
   int irResult3 = IR3.detect();
-
+  updateList();
+  int pingResultR = getAvg(ListA);
+  int pingResultL = getAvg(ListB);
+  Serial.print("Ping 2: ");
+  Serial.println(pingResultL);
 
 
   // //update list
@@ -105,7 +114,20 @@ void loop() {
     delay(500);
   }
   else {
-    goForwards(2);
+    if (pingResultL < 50) {
+      move(1, spin * 2, 0);
+      move(0, spin * 2, 0);
+      delay(250);
+
+    }
+    else if (pingResultR < 50) {
+      move(1, spin * 2, 1);
+      move(0, spin * 2, 1);
+      delay(200);
+    }
+    else {
+      goForwards(2.5);
+    }
   }
 }
 
