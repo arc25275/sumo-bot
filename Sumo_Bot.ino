@@ -1,4 +1,4 @@
-// #include <Servo.h>
+#include <Servo.h>
 #include "C:\Program Files (x86)\Arduino\hardware\arduino\avr\cores\arduino\Arduino.h"
 #include "./Sensor.h"
 
@@ -28,13 +28,15 @@ const int pingPin2 = 13;
 
 
 //Motors
-int PWMA = 9;
-int AIN1 = 6;
+int PWMA = 6;
+int AIN1 = 8;
 int AIN2 = 7;
 int STBY = 5;
 int PWMB = 3;
 int BIN1 = 4;
 int BIN2 = 2;
+
+int i = 0;
 
 Sensor ping1(0, pingPin1);
 Sensor ping2(0, pingPin2);
@@ -43,12 +45,9 @@ Sensor IR1(1, irPin1);
 Sensor IR2(1, irPin2);
 Sensor IR3(1, irPin3);
 
-// Servo myservo;
+Servo myservo;
 
 void setup() {
-  // myservo.attach(10);
-  // myservo.write(-90);
-  // myservo.detach();
   //Motor
   pinMode(STBY, OUTPUT);
   pinMode(PWMA, OUTPUT);
@@ -71,8 +70,8 @@ void loop() {
   updateList();
   int pingResultR = getAvg(ListA);
   int pingResultL = getAvg(ListB);
-  Serial.print("Ping 2: ");
-  Serial.println(pingResultL);
+  // Serial.print("Ping 2: ");
+  // Serial.println(pingResultL);
 
 
   // //update list
@@ -81,11 +80,14 @@ void loop() {
   // avgB = getAvg(ListB);
 
   //Startup
-  // if (startUp == true) {
-  //   delay(1000);
-  //   goForwards();
-  //   startUp = false;
-  // }
+  if (startUp == true) {
+    delay(2000);
+    myservo.attach(11);
+    myservo.write(0);
+    delay(100);
+    myservo.detach();
+    startUp = false;
+  }
 
   //Range Sensor Reads
   // long range1 = avgA;
@@ -95,12 +97,14 @@ void loop() {
   // Serial.print(" ");
   // Serial.print(range2);
   // Serial.println();
+  Serial.println(i);
   if (irResult1 < IR) {
     goBackwards(2);
     delay(500);
     move(0, spin * 2, 0);
     move(1, spin * 2, 0);
     delay(1000);
+    i = 0;
   }
   else if (irResult2 < IR) {
     goBackwards(2);
@@ -108,10 +112,12 @@ void loop() {
     move(1, spin * 2, 0);
     move(0, spin * 2, 0);
     delay(1000);
+    i = 0;
   }
   else if (irResult3 < IR) {
     goForwards(3);
     delay(500);
+    i = 0;
   }
   else {
     if (pingResultL < 50) {
@@ -126,7 +132,14 @@ void loop() {
       delay(200);
     }
     else {
-      goForwards(2.5);
+
+      goForwards(2.55);
+      i++;
+      if (i > 500) {
+        goBackwards(3);
+        delay(500);
+        i = 0;
+      }
     }
   }
 }
