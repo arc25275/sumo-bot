@@ -13,6 +13,7 @@ const int maxLength = 3;
 int index = 0;
 int ListA[maxLength] = { 0, 0, 0 };
 int ListB[maxLength] = { 0, 0, 0 };
+int ListC[maxLength] = { 0, 0, 0 };
 float avgA = 0;
 float avgB = 0;
 
@@ -25,6 +26,7 @@ const int irPin3 = A2;
 //Range Sensors
 const int pingPin1 = 12;
 const int pingPin2 = 13;
+const int pingPin3 = 9;
 
 
 //Motors
@@ -40,6 +42,7 @@ int i = 0;
 
 Sensor ping1(0, pingPin1);
 Sensor ping2(0, pingPin2);
+Sensor ping3(0, pingPin3);
 
 Sensor IR1(1, irPin1);
 Sensor IR2(1, irPin2);
@@ -63,13 +66,22 @@ void setup() {
 }
 
 void loop() {
+  if (startUp == true) {
+    delay(3000);
+    myservo.attach(11);
+    myservo.write(0);
+    delay(100);
+    myservo.detach();
+    startUp = false;
+  }
+  updateList();
   // Serial.print(ping1.detect());
   int irResult1 = IR1.detect();
   int irResult2 = IR2.detect();
   int irResult3 = IR3.detect();
-  updateList();
   int pingResultR = getAvg(ListA);
   int pingResultL = getAvg(ListB);
+  int pingResultF = getAvg(ListC);
   // Serial.print("Ping 2: ");
   // Serial.println(pingResultL);
 
@@ -80,14 +92,6 @@ void loop() {
   // avgB = getAvg(ListB);
 
   //Startup
-  if (startUp == true) {
-    delay(2000);
-    myservo.attach(11);
-    myservo.write(0);
-    delay(100);
-    myservo.detach();
-    startUp = false;
-  }
 
   //Range Sensor Reads
   // long range1 = avgA;
@@ -98,6 +102,7 @@ void loop() {
   // Serial.print(range2);
   // Serial.println();
   Serial.println(i);
+
   if (irResult1 < IR) {
     goBackwards(2);
     delay(500);
@@ -115,29 +120,33 @@ void loop() {
     i = 0;
   }
   else if (irResult3 < IR) {
-    goForwards(3);
+    goForwards(5);
     delay(500);
     i = 0;
   }
   else {
-    if (pingResultL < 50) {
-      move(1, spin * 2, 0);
-      move(0, spin * 2, 0);
+    if (pingResultL < 50 && pingResultL > 10) {
+      move(1, spin * 3.5, 0);
+      move(0, spin * 3.5, 0);
       delay(250);
-
     }
-    else if (pingResultR < 50) {
-      move(1, spin * 2, 1);
-      move(0, spin * 2, 1);
+    else if (pingResultR < 50 && pingResultR > 10) {
+      move(1, spin * 3.5, 1);
+      move(0, spin * 3.5, 1);
       delay(200);
     }
+    else if (pingResultL < 10 || pingResultR < 10) {
+      goForwards(4);
+    }
+    else if (pingResultF < 10) {
+      goForwards(5);
+    }
     else {
-
       goForwards(2.55);
       i++;
-      if (i > 500) {
+      if (i > 300) {
         goBackwards(3);
-        delay(500);
+        delay(300);
         i = 0;
       }
     }
@@ -194,6 +203,7 @@ void updateList() {
   }
   ListA[index] = ping1.detect();
   ListB[index] = ping2.detect();
+  ListC[index] = ping3.detect();
   index++;
 }
 
