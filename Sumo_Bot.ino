@@ -1,4 +1,3 @@
-#include <Servo.h>
 #include "C:\Program Files (x86)\Arduino\hardware\arduino\avr\cores\arduino\Arduino.h"
 #include "./Sensor.h"
 
@@ -20,8 +19,8 @@ float avgB = 0;
 //IR Sensors
 const int irPin1 = A0;
 const int irPin2 = A1;
-const int irPin3 = A2;
 
+int direction = 0;
 
 //Range Sensors
 const int pingPin1 = 12;
@@ -46,9 +45,7 @@ Sensor ping3(0, pingPin3);
 
 Sensor IR1(1, irPin1);
 Sensor IR2(1, irPin2);
-Sensor IR3(1, irPin3);
 
-Servo myservo;
 
 void setup() {
   //Motor
@@ -68,48 +65,23 @@ void setup() {
 void loop() {
   if (startUp == true) {
     delay(3000);
-    myservo.attach(11);
-    myservo.write(0);
-    delay(100);
-    myservo.detach();
     startUp = false;
   }
   updateList();
   // Serial.print(ping1.detect());
   int irResult1 = IR1.detect();
   int irResult2 = IR2.detect();
-  int irResult3 = IR3.detect();
   int pingResultR = getAvg(ListA);
   int pingResultL = getAvg(ListB);
   int pingResultF = getAvg(ListC);
-  // Serial.print("Ping 2: ");
-  // Serial.println(pingResultL);
-
-
-  // //update list
-  // updateList();
-  // avgA = getAvg(ListA);
-  // avgB = getAvg(ListB);
-
-  //Startup
-
-  //Range Sensor Reads
-  // long range1 = avgA;
-  // long range2 = avgB;
-  // Serial.print("Distance = ");
-  // Serial.print(range1);
-  // Serial.print(" ");
-  // Serial.print(range2);
-  // Serial.println();
-  Serial.println(i);
-
+  Serial.println(pingResultF);
   if (irResult1 < IR) {
     goBackwards(2);
     delay(500);
     move(0, spin * 2, 0);
     move(1, spin * 2, 0);
     delay(1000);
-    i = 0;
+
   }
   else if (irResult2 < IR) {
     goBackwards(2);
@@ -117,37 +89,38 @@ void loop() {
     move(1, spin * 2, 0);
     move(0, spin * 2, 0);
     delay(1000);
-    i = 0;
-  }
-  else if (irResult3 < IR) {
-    goForwards(5);
-    delay(500);
-    i = 0;
   }
   else {
-    if (pingResultL < 50 && pingResultL > 10) {
-      move(1, spin * 3.5, 0);
-      move(0, spin * 3.5, 0);
-      delay(250);
-    }
-    else if (pingResultR < 50 && pingResultR > 10) {
-      move(1, spin * 3.5, 1);
-      move(0, spin * 3.5, 1);
-      delay(200);
-    }
-    else if (pingResultL < 10 || pingResultR < 10) {
+    if (pingResultL < 20 || pingResultR < 20) {
       goForwards(4);
     }
-    else if (pingResultF < 10) {
-      goForwards(5);
+    else if (pingResultF < 50) {
+      if (pingResultF < 5) {
+        goForwards(5);
+      }
+      else {
+        goForwards(4);
+      }
     }
     else {
-      goForwards(2.55);
+      if (direction == 1) {
+        move(1, spin * 2, 1);
+        move(0, spin * 2, 1);
+      }
+      else if (direction == 0) {
+        move(1, spin * 2, 0);
+        move(0, spin * 2, 0);
+      }
       i++;
-      if (i > 300) {
-        goBackwards(3);
-        delay(300);
-        i = 0;
+      if (i > 100) {
+        if (direction == 1) {
+          direction = 0;
+          i = 1;
+        }
+        if (direction == 0 && i != 1) {
+          direction = 1;
+          i = 0;
+        }
       }
     }
   }
